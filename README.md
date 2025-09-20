@@ -1,2 +1,2 @@
 # Demo picture
-![Screen1](/screen1.png)
+![Demo1](/demo1.gif)
