@@ -1,0 +1,1097 @@
+<!doctype html>
+<html>
+	<head>
+		<style>
+html{
+	width: 100%;
+	height:100%;
+	padding:0px;
+	margin:0px;
+}
+body{
+	width: 100%;
+	height:calc(100% - 3px);
+	padding:0px;
+	margin:0px;
+	background: white;
+}
+.div_btn.start, .div_btn.stop{
+	display: inline-block;
+	background: white;
+	padding-top: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-bottom: 10px;
+	margin: 10px;
+	border: 1px solid black;
+	border-radius: 9px;
+	vertical-align: middle;
+	text-align: center;
+	width: 100px;
+	cursor: pointer;
+}
+.div_btn.start:hover, .div_btn.stop:hover{
+	border: 1px solid white;
+	background: grey;
+	color:white;
+}
+#div_pc_status{
+	display: inline-block;
+	color: black;
+	margin-left: 10px;
+	margin-bottom: 10px;
+}
+/*input{
+	border: 0px;
+	outline: none;
+}
+input:focus{
+	border: 0px;
+}*/
+#div_pc__btns_screens{
+	width: 100%;
+	height: 100%;
+}
+		</style>
+		<!--<script>
+			var autoStart_app_config = {};
+		</script>
+		<script src="autoStart_app_config.console_read.js" />-->
+		<script>
+var screenWidth = 0;
+var screenHeight = 0;
+var screenWidth2 = 0;
+var screenHeight2 = 0;
+
+var varCpu = {
+	"Timing": 10
+};
+
+var helpers = {
+	rnd: function(max){
+		var r = (Math.round(max*Math.random()));
+		while(true){
+			var isExist = false;
+			for(var i=0;i<this.rndIds.length;i++)
+				if(this.rndIds[i]==r){
+					isExist = true;
+				}
+			if(isExist){
+				r = (Math.round(max*Math.random()));
+			}else
+				break;
+		}
+		this.rndIds[this.rndIds.length] = r;
+		return r;
+	},
+	rndIds: []
+};
+
+var cpuTimer;
+var cpuTimerExecCommand = false;
+
+var pc = {};
+pc.runningProcesses = [];
+
+var div_pc_status;
+//var div_pc_btns;
+
+window.onload = function(){
+	console.log("window.onload");
+	screenWidth = document.getElementsByTagName("body")[0].clientWidth;
+	screenHeight = document.getElementsByTagName("body")[0].clientHeight;
+	screenWidth2 = Math.round(screenWidth / 2);
+	screenHeight2 = Math.round(screenHeight / 2);
+	
+	div_pc_status = document.getElementById("div_pc_status");
+	//div_pc_btns = document.getElementById("div_pc_btns");
+	
+	windowOnload();
+}
+window.onresize = function (){
+	console.log("window.onresize");
+	screenWidth = document.getElementsByTagName("body")[0].clientWidth;
+	screenHeight = document.getElementsByTagName("body")[0].clientHeight;
+	screenWidth2 = Math.round(screenWidth / 2);
+	screenHeight2 = Math.round(screenHeight / 2);
+	windowOnresize();
+}
+function windowOnresize(){
+}
+function windowOnload(){
+	loadDefaultProcessesAkaCore();
+	pc_start();
+}
+function loadDefaultProcessesAkaCore(){
+	var id = helpers.rnd(1000 * 1000 * 1000);
+	var ind = pc.runningProcesses.length;
+	pc.runningProcesses[ind] = {
+		"id": id,
+		"name": ind + "_" + id + "_core",
+		"codeList": [
+			// screens
+			"screen 800px 600px white screen_1",
+			"screen 800px 600px white screen_2",
+			"set screen active screen_1",
+			"set screen out screen_1",
+			"keyboard standart",
+			"console run core app ([time])",
+			// screen block top
+			"screenBlock top 0px 0px",
+			"screenBlock2Parent top top_loading",
+			"print top_loading [time]",
+			"println top_loading loading ...",
+			"sleep 10",
+			//
+			"screenBlock2Parent top top_help_screens",
+			"screenBlockStyle top_help_screens color red",
+			"print top_help_screens Shift+1 goto Screen1",
+			"println top_help_screens Shift+2 goto Screen2",
+			//
+			"screenBlock2Parent top top_autoStartApps",
+			"print top_autoStartApps [time]",
+			"println top_autoStartApps loaded",
+			"sleep 10",
+			"println top_autoStartApps [time]",
+			"println top_autoStartApps loading auto start apps...",
+			// autoStartApps
+			"load autoStartApps",
+			"println top_autoStartApps [time]",
+			"println top_autoStartApps loaded",
+			"sleep 10",
+			"println top_autoStartApps ",
+			// btn gotoScreen2
+			"screenBlock2Parent top top_btns",
+			"btn top_btns gotoScreen2 onclick setScreenActive screen_2",
+			"btnEvent gotoScreen2 mouseover style backgroundColor red",
+			"btnEvent gotoScreen2 mouseout style backgroundColor white",
+			// btn startFpsApp
+			"btn top_btns startAppFps onclick startApp fps_app",
+			// btn startAppTaskList
+			"btn top_btns startAppTaskList onclick startApp taskList_app",
+			// btn setStyleDarkMode
+			"btn top_btns setStyleDarkMode onclick setStyleMode dark",
+			"btnStyle setStyleDarkMode background grey",
+			"btnEvent setStyleDarkMode mouseover style backgroundColor white",
+			"btnEvent setStyleDarkMode mouseout style backgroundColor grey",
+			// btn setStyleWhiteMode
+			"btn top_btns setStyleWhiteMode onclick setStyleMode white",
+			"btnStyle setStyleWhiteMode background white",
+			"btnEvent setStyleWhiteMode mouseover style backgroundColor grey",
+			"btnEvent setStyleWhiteMode mouseout style backgroundColor white",
+			// btn startGlSampleApp
+			"btn top_btns startAppGlSample onclick startApp gl_sample_app",
+			//
+			"start app core_main_loop_otherApps_app",
+			"start app gl_app"
+		],
+		"codeCurrentPosition": -1,
+		"codeStatusChk": null,
+		"codeStatusChkExt": null,
+		"statusWork": null,
+		"lastDtCpuUsed": null,
+		"marks": "",
+		"typeApp": "core",
+		"vars": {},
+		"configs": {},
+		"coreFncs": {
+			"setGlBlock": function(glBlockName){
+					pc.runningProcesses[0].glBlockName = glBlockName;
+			}
+		}
+	};
+	setDefaultFunctionsInInd(ind);
+}
+function setDefaultFunctionsInInd(ind){
+	pc.runningProcesses[ind]["sleep"] = function(it){
+		this.sleepIter = it;
+	};
+	pc.runningProcesses[ind]["goto"] = function(step){
+		var it = -1;
+		for(var i=0;i<this.codeList.length;i++){
+			var vs = this.codeList[i].split(" ");
+			if(vs[0]=="step" && vs[1]==step){
+				it = i;
+				break;
+			}
+		}
+		if(it>-1)
+			this.codeCurrentPosition = it;
+		console.log("it: "+it);
+	};
+	pc.runningProcesses[ind]["setScreenActive"] = function(screenId){
+		setScreenActive(screenId);
+		pc.runningProcesses[0].configs.screenActive = screenId;
+	};
+	pc.runningProcesses[ind]["setScreenOut"] = function(screenId){
+		this.configs.screenOut = screenId;
+	};
+	pc.runningProcesses[ind]["setStyleMode"] = function(styleMode){
+		//TODO for all screens, but not current!!!
+		/*var screen = getScreen(this.configs.screenOut);
+		if(styleMode=="dark"){
+			var darkColor = "#3a3939";
+			screen.style.color = darkColor;
+			screen.style.background = "black";
+			screen.style.border = "1px solid "+darkColor;
+		}
+		if(styleMode=="white"){
+			screen.style.color = "black";
+			screen.style.background = "white";
+		}*/
+		setStyleMode(styleMode);
+	};
+	pc.runningProcesses[ind]["startApp"] = function(app){
+		startApp(app);
+	}
+	/*pc.runningProcesses[ind]["setScreenCoreApp"] = function(screenId){
+		this.configs.screenCore = screenId;
+	};
+	pc.runningProcesses[ind]["setScreenOtherApp"] = function(screenId){
+		this.configs.screenCore = screenId;
+	};*/
+	pc.runningProcesses[ind]["waitVar"] = function(varName){
+		if(this.vars[varName]){
+		}else
+			this.codeCurrentPosition--;
+	}
+	pc.runningProcesses[ind]["nextCodeLineOtherApps"] = function(){
+		nextCodeLineOtherApps();
+	}
+	pc.runningProcesses[ind]["restartCodeCurrentPosition"] = function(){
+		this.codeCurrentPosition = -1;
+	}
+	pc.runningProcesses[ind]["newDevice"] = function(typeDevice){
+		if(typeDevice=="keyboardStandart"){
+			newDevice(typeDevice);
+		}
+	}
+}
+function autoStartApps(){
+	var id = helpers.rnd(1000 * 1000 * 1000);
+	var ind = pc.runningProcesses.length;
+	//autoStart_app_config.console_read.init(ind, id);
+	pc.runningProcesses[ind] = {
+		"id": id,
+		"name": ind + "_" + id + "_autoStartApp_input_var_print",
+		"codeList": [
+			"set screen out screen_2",
+			"console run autoStart app console read ([time])",
+			"screenBlock bottom 20px 0px",
+			//"inputStyle border 0px",
+			"step loop",
+			"clear var local inputValParam",
+			"clear block bottom",
+			"input bottom local inputValParam",
+			"wait var inputValParam",
+			"printVar bottom inputValParam",
+			"console sleep... ([time])",
+			"sleep 500",
+			"console sleep...ok ([time])",
+			"goto loop"
+		],
+		"codeCurrentPosition": -1,
+		"codeStatusChk": null,
+		"codeStatusChkExt": null,
+		"statusWork": null,
+		"lastDtCpuUsed": null,
+		"marks": "",
+		"typeApp": "autoStartApp",
+		"vars": {},
+		"configs": {}
+	};
+	setDefaultFunctionsInInd(ind);
+	//
+	id = helpers.rnd(1000 * 1000 * 1000);
+	ind = pc.runningProcesses.length;
+	pc.runningProcesses[ind] = {
+		"id": id,
+		"name": ind + "_" + id + "_autoStartApp_print_time",
+		"codeList": [
+			"set screen out screen_2",
+			"console run autoStart app timer ([time])",
+			"screenBlock top 0px 0px",
+			"step loop",
+			"print top [time]",
+			"sleep 50",
+			"goto loop"
+		],
+		"codeCurrentPosition": -1,
+		"codeStatusChk": null,
+		"codeStatusChkExt": null,
+		"statusWork": null,
+		"lastDtCpuUsed": null,
+		"marks": "",
+		"typeApp": "autoStartApp",
+		"vars": {},
+		"configs": {}
+	};
+	setDefaultFunctionsInInd(ind);
+	//
+	id = helpers.rnd(1000 * 1000 * 1000);
+	ind = pc.runningProcesses.length;
+	pc.runningProcesses[ind] = {
+		"id": id,
+		"name": ind + "_" + id + "_autoStartApp_keyboardEvents",
+		"codeList": [
+			"set screen out screen_1",
+			"console run autoStart app keyboard events",
+			"set event keyboard up changeScreen body"
+		],
+		"codeCurrentPosition": -1,
+		"codeStatusChk": null,
+		"codeStatusChkExt": null,
+		"statusWork": null,
+		"lastDtCpuUsed": null,
+		"marks": "",
+		"typeApp": "autoStartApp",
+		"vars": {},
+		"configs": {}
+	};
+	setDefaultFunctionsInInd(ind);
+}
+function checkAndVerifyCodeList(codeList){
+	console.log("checkAndVerifyCodeList.codeList:");
+	console.log(codeList);
+	if(codeList.length==0) return false;
+	return true;
+}
+function nextCodeLineOtherApps(){
+	for(var i=1;i<pc.runningProcesses.length;i++)
+		doCpuOneTimingProcessByI(i);
+}
+function doCpuOneTimingProcessByI(i){
+	//console.log("doCpuOneTimingProcessByI");
+	//var i=0;
+	if(!pc)
+		return;
+	if(!pc.runningProcesses)
+		return;
+	if(!pc.runningProcesses[i])
+		return;
+	if(pc.runningProcesses[i].statusWork == "stop"){
+		return;
+	}
+	if(pc.runningProcesses[i].codeCurrentPosition==-1){
+		if(!checkAndVerifyCodeList(pc.runningProcesses[i].codeList))
+			pc.runningProcesses[i].codeStatusChk = "checkAndVerifyError";
+	}
+	if(pc.runningProcesses[i].codeStatusChk == "checkAndVerifyError"){
+		pc.runningProcesses[i].lastDtCpuUsed = new Date();
+		pc.runningProcesses[i].statusWork = "stop";
+		return;
+	}
+	if(pc.runningProcesses[i].sleepIter && pc.runningProcesses[i].sleepIter>0){
+		pc.runningProcesses[i].sleepIter--;
+		return;
+	}else if(pc.runningProcesses[i].sleepIter==0){
+		pc.runningProcesses[i].sleepIter = null;
+		delete pc.runningProcesses[i].sleepIter;
+	}
+	if(pc.runningProcesses[i].codeCurrentPosition+1 >= pc.runningProcesses[i].codeList.length){
+		if(pc.runningProcesses[i].codeCurrentPosition==-1){
+			pc.runningProcesses[i].codeStatusChkExt = "codeListEmpty";
+		}
+		pc.runningProcesses[i].codeStatusChk = "finish";
+		pc.runningProcesses[i].statusWork = "finish";
+		return;
+	}
+	pc.runningProcesses[i].codeStatusChk = "read";
+	pc.runningProcesses[i].statusWork = "run";
+	pc.runningProcesses[i].codeCurrentPosition++;
+	pc.runningProcesses[i].lastDtCpuUsed = new Date();
+	//
+	var cmd = pc.runningProcesses[i].codeList[pc.runningProcesses[i].codeCurrentPosition];
+	parseCmd(i, cmd);
+}
+function progressCpu(){
+	if(cpuTimerExecCommand)
+		return;
+	cpuTimerExecCommand = true;
+	//doCpuOneTimingProcessByI(0);
+	for(var i=0;i<pc.runningProcesses.length;i++)
+		if(pc.runningProcesses[i].typeApp=="core" || pc.runningProcesses[i].typeApp=="coreApp")
+			doCpuOneTimingProcessByI(i);
+	//cpuTimer = setTimeout(progressCpu, varCpu.Timing);// mb setInterval?
+	cpuTimerExecCommand = false;
+}
+function pc_start(){
+	//cpuTimer = setTimeout(progressCpu, varCpu.Timing);// mb setInterval?
+	if(pc && pc.runningProcesses && pc.runningProcesses[0])
+		pc.runningProcesses[0].restartCodeCurrentPosition();
+	if(cpuTimer)
+		clearInterval(cpuTimer);
+	cpuTimer = setInterval(progressCpu, varCpu.Timing);
+	div_pc_status.innerHTML = "PC started ("+(new Date()).toLocaleString()+")";
+}
+function pc_stop(){
+	if(cpuTimer){
+		//clearTimeout(cpuTimer);
+		clearInterval(cpuTimer);
+	}
+	div_pc_status.innerHTML = "PC stoped ("+(new Date()).toLocaleString()+")";
+}
+function parseCmd(processInd, cmdLine){
+	//console.log("parseCmd processInd: "+processInd+", cmdLine: "+cmdLine);
+	var currentProcess = pc.runningProcesses[processInd];
+	var cmds = cmdLine.split(" ");
+	var cmd = cmds[0];
+	if(cmd=="console"){
+		var i = cmdLine.indexOf(" ", cmd.length);
+		var t = cmdLine.substr(i+1);
+		console.log(parseT(t));
+	}
+	if(cmd=="screen"){
+		//var active = (cmds[5]=="default");
+		var active = false;
+		
+		//screen frame
+		createElement(
+			"div"
+			, "div_pc_screens"
+			, { 
+				"width": cmds[1]
+				, "height": cmds[2]
+				, "id": "screens_frame_"+cmds[4]
+				, "position": "relative"
+				//, "margin-left": "100px"
+				, "background": cmds[3]
+				, "display": (active?"block":"none")
+				, "border": "1px solid black" 
+				, "overflow": "auto"
+				, "onclick": function(){ console.log("111"); } 
+			}
+			, "screens screen"
+		);
+		/*
+		//screen btn on pc btns
+		createElement(
+			"div"
+			, "div_pc_btns"
+			, { 
+				"id": "screens_btn_"+cmds[4]
+				, "margin-left": "10px"
+				, "innerHTML": cmds[4]
+				, "background": (active?"white":"grey")
+				, "border": "1px solid #b1b1b1"
+				, "border-radius": "7px 7px 0px 0px"
+				, "border-bottom-left-radius": "0px"
+				, "border-bottom-right-radius": "0px"
+				, "cursor": "pointer"
+				, "display": "inline-block"
+				, "padding": "5px 10px" 
+				, "onclick": function(){ currentProcess.setScreenActive(cmds[4]); } 
+			}
+			, "screens btn"
+		);*/
+		
+		if(!pc.runningProcesses[0].configs.screens)
+			pc.runningProcesses[0].configs.screens = [];
+		if(pc.runningProcesses[0].configs.screens)
+			pc.runningProcesses[0].configs.screens[pc.runningProcesses[0].configs.screens.length] = cmds[4];
+	}
+	if(cmd=="screenBlock"){
+		var id = "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1];
+		var el = document.getElementById(id);
+		if(el)
+			el.remove();
+		var o = { 
+			"id": id
+			, "position": "absolute"
+			, "top": cmds[2]
+			, "left": cmds[3]
+		};
+		if(cmds[4])
+			o["color"] = cmds[4];
+		createElement(
+			"div"
+			, "screens_frame_"+currentProcess.configs.screenOut
+			, o
+		);
+	}
+	if(cmd=="screenBlock2Parent"){
+		var id = "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[2];
+		var el = document.getElementById(id);
+		if(el)
+			el.remove();
+		var o = { 
+			"id": id
+		};
+		createElement(
+			"div"
+			, "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+			, o
+		);
+	}
+	if(cmd=="print"){
+		var el = document.getElementById("screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]);
+		var i = cmdLine.indexOf(" ", cmd.length+1);
+		var t = cmdLine.substr(i+1);
+		el.innerHTML = parseT(t);
+	}
+	if(cmd=="println"){
+		var el = getElByScreen(currentProcess.configs.screenOut, cmds[1]);
+		var i = cmdLine.indexOf(" ", cmd.length+1);
+		var t = cmdLine.substr(i+1);
+		el.innerHTML += "<br>\n" + parseT(t);
+	}
+	if(cmd=="printVar"){
+		var el = document.getElementById("screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]);
+		var varName = getSpaced3param(cmdLine);
+		el.innerHTML = currentProcess.vars[varName];
+	}
+	if(cmd=="sleep"){
+		currentProcess.sleep(cmds[1]);
+	}
+	if(cmd=="goto"){
+		currentProcess.goto(cmds[1]);
+	}
+	if(cmd=="load"){
+		if(cmds[1]=="autoStartApps")
+			autoStartApps();
+	}
+	if(cmd=="start"){
+		if(cmds[1]=="app")
+			currentProcess.startApp(cmds[2]);
+	}
+	if(cmd=="input"){
+		var input = createElement(
+			"input"
+			, "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+			, {
+				"onkeyup": function(e){
+					if(e.key=="Enter"){
+						var v = e.target.value;
+						if(cmds[2]=="global")
+							pc.runningProcesses[0].vars[cmds[3]] = v;
+						if(cmds[2]=="local")
+							currentProcess.vars[cmds[3]] = v;
+					}
+				}
+				, "inputStyle": currentProcess.configs.inputStyle
+			}
+		);
+		input.focus();
+	}
+	if(cmd=="set"){
+		if(cmds[1]=="screen"){
+			// check permissions
+			/*if(pc.runningProcesses[processInd].typeApp=="core"){
+				if(cmds[2]=="active"){
+					pc.runningProcesses[processInd].setScreenActive(cmds[3]);
+				}
+			}else
+				console.log("set screen ... - only in core app!");*/
+			if(cmds[2]=="active"){
+				currentProcess.setScreenActive(cmds[3]);
+			}
+			if(cmds[2]=="out"){
+				currentProcess.setScreenOut(cmds[3]);
+			}
+		}
+		if(cmds[1]=="event")
+			if(cmds[2]=="keyboard")
+				if(cmds[3]=="up"){
+					if(cmds[4]=="changeScreen"){
+						var el = document.getElementById(cmds[5]);
+						if(el)
+							el.onkeyup = function(e){
+								console.log("event keyboard up");
+								console.log(e);
+								//if(e.ctrlKey)
+								if(e.shiftKey)
+									if(e.keyCode>=48 && e.keyCode<=57){
+										var s = "screen_"+(e.keyCode-48);
+										var ss = pc.runningProcesses[0].configs.screens;
+										for(var i=0;i<ss[i].length;i++)
+											if(ss[i]==s){
+												currentProcess.setScreenActive(s);
+												break;
+											}
+									}
+								//
+								modElementStyle(
+									"div_pc_devices_keyboardStandart_" + e.key
+									, {
+										"styleName": "background"
+										, "styleValue": "white"
+									}
+								);
+							}
+							el.onkeydown = function(e){
+								modElementStyle(
+									"div_pc_devices_keyboardStandart_" + e.key
+									, {
+										"styleName": "background"
+										, "styleValue": "red"
+									}
+								);
+							}
+					}
+				}
+	}
+	if(cmd=="wait"){
+		if(cmds[1]=="var"){
+			currentProcess.waitVar(cmds[2]);
+		}
+	}
+	if(cmd=="throw"){
+		if(cmds[1]=="var"){
+			throw currentProcess.vars[cmds[2]];
+		}
+	}
+	if(cmd=="inputStyle"){
+		if(!currentProcess.configs.hasOwnProperty("inputStyle"))
+			currentProcess.configs.inputStyle = {};
+		currentProcess.configs.inputStyle[cmds[1]] = cmds[2];
+	}
+	if(cmd=="clear"){
+		if(cmds[1]=="var"){
+			if(cmds[2]=="local"){
+				delete currentProcess.vars[cmds[3]];
+			}
+		}
+		if(cmds[1]=="block"){
+			var blockName = getSpaced3param(cmdLine);
+			var el = getElByScreen(currentProcess.configs.screenOut, blockName);
+			el.innerHTML = "";
+		}
+	}
+	if(cmd=="btn"){
+		var o = { 
+			"id": "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[2]
+			, "margin-left": "10px"
+			, "innerHTML": cmds[2]
+			, "background": "white"
+			, "border": "1px solid #b1b1b1"
+			, "border-radius": "7px 7px 0px 0px"
+			, "border-bottom-left-radius": "0px"
+			, "border-bottom-right-radius": "0px"
+			, "cursor": "pointer"
+			, "display": "inline-block"
+			, "padding": "5px 10px" 
+			//, "onclick": function(){ currentProcess.setScreenActive(cmds[4]); } 
+		};
+		if(cmds[3] && cmds[3]=="onclick")
+			if(cmds[4]){
+				if(cmds[4]=="setScreenActive"){
+					o.onclick = function(){ currentProcess.setScreenActive(cmds[5]); } 
+				}
+				if(cmds[4]=="setStyleMode"){
+					o.onclick = function(){ currentProcess.setStyleMode(cmds[5]); } 
+				}
+				if(cmds[4]=="startApp"){
+					o.onclick = function(){ currentProcess.startApp(cmds[5]); } 
+				}
+			}
+		createElement(
+			"div"
+			, "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+			, o
+			, "screen btns"
+		);
+	}
+	if(cmd=="btnEvent"){
+		if(cmds[3]=="style"){
+			modElementEvent(
+				"screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+				, cmds[2]
+				, {
+					"styleName": cmds[4]
+					, "styleValue": cmds[5]
+				}
+			);
+		}
+	}
+	if(cmd=="btnStyle"){
+		modElementStyle(
+			"screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+			, {
+				"styleName": cmds[2]
+				, "styleValue": cmds[3]
+			}
+		);
+	}
+	if(cmd=="get"){
+		if(cmds[1]=="count"){
+			if(cmds[2]=="loadedProcess"){
+				currentProcess.vars[cmds[3]] = getCountLoadedProcess();
+			}
+			if(cmds[2]=="workProcess"){
+				currentProcess.vars[cmds[3]] = getCountWorkProcess();
+			}
+		}
+		if(cmds[1]=="list"){
+			if(cmds[2]=="namesWorkProcess"){
+				currentProcess.vars[cmds[3]] = getListNamesWorkProcess({
+					"isShowBtnStopApp": true
+				});
+			}
+		}
+	}
+	if(cmd=="screenBlockStyle"){
+		modElementStyle(
+			"screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[1]
+			, {
+				"styleName": cmds[2]
+				, "styleValue": cmds[3]
+			}
+		);
+	}
+	if(cmd=="cpu"){
+		if(cmds[1]=="nextCodeLine")
+			if(cmds[2]=="otherApps")
+				currentProcess.nextCodeLineOtherApps();
+	}
+	if(cmd=="gl"){
+		if(cmds[1]=="svg"){
+			var id = "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[2];
+			var el = document.getElementById(id);
+			if(el)
+				el.remove();
+			var o = { 
+				"id": id
+				, "position": "absolute"
+				, "top": cmds[3]
+				, "left": cmds[4]
+			};
+			createElement(
+				"svg"
+				, "screens_frame_"+currentProcess.configs.screenOut
+				, o
+			);
+			pc.runningProcesses[0].coreFncs.setGlBlock(cmds[2]);
+		}
+		if(cmds[1]=="circle"){
+			var id = "screens_frame_"+currentProcess.configs.screenOut+"_"+cmds[2];
+			var parentId = "screens_frame_"+currentProcess.configs.screenOut+"_"+pc.runningProcesses[0].glBlockName;
+			var el = document.getElementById(id);
+			if(el)
+				el.remove();
+			var o = { 
+				"id": id
+				, "type": cmds[1]
+				, "position": "absolute"
+				, "cy": cmds[3]
+				, "cx": cmds[4]
+				, "r": cmds[5]
+				, "stroke": cmds[6]
+			};
+			createGlSvgElement(parentId, o);
+		}
+	}
+	if(cmd=="keyboard"){
+		if(cmds[1]=="standart"){
+			pc.runningProcesses[0].newDevice("keyboardStandart");
+		}
+	}
+}
+function setStyleMode(styleMode){
+	pc.runningProcesses[0].configs.styleMode = styleMode;
+	if(styleMode=="dark"){
+		pc.runningProcesses[0].configs.darkColor = "#3a3939";
+		modElementStyle2("body", { "background": "black", "color": pc.runningProcesses[0].configs.darkColor });
+		modElementStyle2("div_pc_status", { "color": pc.runningProcesses[0].configs.darkColor });
+		//modElementStyle2("div_pc_btns", { "background": "black" });
+		modElementStyle2("div_pc_btn_start", { "background": "black", "border": "1px solid "+pc.runningProcesses[0].configs.darkColor, "color": pc.runningProcesses[0].configs.darkColor });
+		modElementStyle2("div_pc_btn_stop", { "background": "black", "border": "1px solid "+pc.runningProcesses[0].configs.darkColor, "color": pc.runningProcesses[0].configs.darkColor });
+		var screenIds = pc.runningProcesses[0].configs.screens;
+		for(var i=0;i<screenIds.length;i++){
+			var background = "black";
+			if(pc.runningProcesses[0].configs.screenActive==screenIds[i]){
+				background = "#1e1e1e";
+			}
+			//modElementStyle2("screens_btn_"+screenIds[i], { "background": background, "color": pc.runningProcesses[0].configs.darkColor, "border": "1px solid "+pc.runningProcesses[0].configs.darkColor });
+			modElementStyle2("screens_frame_"+screenIds[i], { "background": "black", "color": pc.runningProcesses[0].configs.darkColor, "border": "1px solid "+pc.runningProcesses[0].configs.darkColor });
+		}
+		var screenBtns = document.getElementsByClassName("screen btns");
+		for(var i=0;i<screenBtns.length;i++){
+			screenBtns[i].style.background = "black";
+			screenBtns[i].style.border = "1px solid "+pc.runningProcesses[0].configs.darkColor;
+		}
+	}
+	if(styleMode=="white"){
+		modElementStyle2("body", { "background": "white", "color": "black" });
+		modElementStyle2("div_pc_status", { "color": "black" });
+		//modElementStyle2("div_pc_btns", { "background": "grey" });
+		modElementStyle2("div_pc_btn_start", null);
+		modElementStyle2("div_pc_btn_stop", null);
+		var screenIds = pc.runningProcesses[0].configs.screens;
+		for(var i=0;i<screenIds.length;i++){
+			var background = "grey";
+			if(pc.runningProcesses[0].configs.screenActive==screenIds[i]){
+				background = "white";
+			}
+			//modElementStyle2("screens_btn_"+screenIds[i], { "background": background, "color": "black", "border": "1px solid rgb(177, 177, 177)" });
+			modElementStyle2("screens_frame_"+screenIds[i], { "background": "white", "color": "black", "border": "1px solid black" });
+		}
+		var screenBtns = document.getElementsByClassName("screen btns");
+		for(var i=0;i<screenBtns.length;i++){
+			screenBtns[i].style.background = "white";
+			screenBtns[i].style.border = "1px solid rgb(177, 177, 177)";
+		}
+	}
+}
+function modElementStyle2(elId, o){
+	var el = document.getElementById(elId);
+	if(o==null){
+		el.style = "";
+		return;
+	}
+	var arrK = Object.keys(o);
+	for(var i=0;i<arrK.length;i++)
+		el.style[arrK[i]] = o[arrK[i]];
+}
+function modElementStyle(elId, o){
+	var el = document.getElementById(elId);
+	el.style[o.styleName] = o.styleValue;
+}
+function modElementEvent(elId, event, o){
+	var el = document.getElementById(elId);
+	el["on"+event] = function(th){ th.target.style[o.styleName] = o.styleValue; }
+}
+function getElByScreen(screen, elId){
+	return document.getElementById("screens_frame_"+screen+"_"+elId);
+}
+function getScreen(screenName){
+	return document.getElementById("screens_frame_"+screenName);
+}
+function getSpaced3param(cmdLine){
+	var cmd = cmdLine.split(" ")[0];
+	var i = cmdLine.indexOf(" ", cmd.length+1);
+	return cmdLine.substr(i+1);
+}
+function parseT(t){
+	if(t.indexOf("[time]")>-1)
+		t = t.replaceAll("[time]", new Date());
+	return t;
+}
+function createElement(tp, parentId, o, c){
+	if(tp=="div"){
+		var div = document.createElement(tp);
+		if(o.id) div.id = o.id;
+		div.style = getStyleStrFromObj(o);
+		if(o.innerHTML) div.innerHTML = o.innerHTML;
+		if(c) div.classList = c;
+		if(o.onclick) div.onclick = o.onclick;
+		addNewElement2Parent(parentId, div);
+	}
+	if(tp=="input"){
+		var input = document.createElement(tp);
+		input.onkeyup = o.onkeyup;
+		if(o.inputStyle) input.style = getStyleStrFromObj(o.inputStyle);
+		if(c) input.classList = c;
+		if(o.onclick) input.onclick = o.onclick;
+		addNewElement2Parent(parentId, input);
+		return input;
+	}
+	if(tp=="button"){
+		var button = document.createElement(tp);
+		if(o.id) button.id = o.id;
+		button.style = getStyleStrFromObj(o);
+		if(o.innerHTML) button.innerHTML = o.innerHTML;
+		if(c) button.classList = c;
+		if(o.onclick) button.onclick = o.onclick;
+		addNewElement2Parent(parentId, button);
+	}
+	if(tp=="svg"){
+		var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		if(o.id) svg.id = o.id;
+		svg.style = getStyleStrFromObj(o);
+		if(c) svg.classList = c;
+		if(o.onclick) svg.onclick = o.onclick;
+		addNewElement2Parent(parentId, svg);
+	}
+}
+function createGlSvgElement(parentId, o){
+	console.log(parentId);
+	console.log(o);
+	//if(o.type=="circle"){
+		var el = document.createElementNS("http://www.w3.org/2000/svg", o.type);
+		if(o.id) el.id = o.id;
+		el.style = getStyleStrFromObj(o);
+		el = getAttributeFromObj(el, o);
+		addNewElement2Parent(parentId, el);
+	//}
+}
+function addNewElement2Parent(parentId, newElement){
+	var parent = document.getElementById(parentId);
+	parent.appendChild(newElement);
+}
+function getStyleStrFromObj(o){
+	var style = "";
+	if(o.width) style += "width: "+o.width+";";
+	if(o.height) style += "height: "+o.height+";";
+	if(o.position) style += "position: "+o.position+";";
+	if(o.top) style += "top: "+o.top+";";
+	if(o.left) style += "left: "+o.left+";";
+	if(o.color) style += "color: "+o.color+";";
+	if(o.background) style += "background: "+o.background+";";
+	if(o.display) style += "display: "+o.display+";";
+	if(o.border) style += "border: "+o.border+";";
+	if(o.cursor) style += "cursor: "+o.cursor+";";
+	if(o.padding) style += "padding: "+o.padding+";";
+	if(o.margin) style += "margin: "+o.margin+";";
+	if(o.overflow) style += "overflow: "+o.overflow+";";
+	if(o["margin-left"]) style += "margin-left: "+o["margin-left"]+";";
+	if(o["background-color"]) style += "background-color: "+o["background-color"]+";";
+	if(o["border-radius"]) style += "border-radius: "+o["border-radius"]+";";
+	return style;
+}
+function getAttributeFromObj(el, o){
+	el.setAttribute("fill", "#ffffff00");
+	if(o.cx) el.setAttribute("cx", o.cx);
+	if(o.cy) el.setAttribute("cy", o.cy);
+	if(o.r) el.setAttribute("r", o.r);
+	if(o.fill) el.setAttribute("fill", o.fill);
+	if(o.stroke) el.setAttribute("stroke", o.stroke);
+	return el;
+}
+function updStyleElemFromObj(elem, o){
+	if(o.background) elem.style.background = o.background;
+	if(o.display) elem.style.display = o.display;
+	if(o.color) elem.style.color = o.color;
+	if(o.border) elem.style.border = o.border;
+}
+function setScreenActive(screenId){
+	console.log("setScreenActive("+screenId+")");
+	disableAllScreens();
+	//btn
+	/*var btn = document.getElementById("screens_btn_"+screenId);
+	if(pc.runningProcesses[0].configs.styleMode=="dark"){
+		updStyleElemFromObj(btn, { "background": "#1e1e1e" });
+	}else
+		updStyleElemFromObj(btn, { "background": "white" });*/
+	//screen
+	var screen = document.getElementById("screens_frame_"+screenId);
+	updStyleElemFromObj(screen, { "display": "block" });
+}
+function disableAllScreens(){
+	//btns
+	var btns = document.getElementsByClassName("screens btn");
+	for(var i=0;i<btns.length;i++)
+		if(pc.runningProcesses[0].configs.styleMode=="dark"){
+			updStyleElemFromObj(btns[i], { "background": "black" });
+		}else
+			updStyleElemFromObj(btns[i], { "background": "grey" });
+	//screens
+	var screens = document.getElementsByClassName("screens screen");
+	for(var i=0;i<screens.length;i++)
+		updStyleElemFromObj(screens[i], { "display": "none" });
+}
+function startApp(app){
+	var script = document.createElement("script");
+	script.src = app+".js?noCacheTs="+((new Date()).getTime());
+	addNewElement2Parent("body", script);
+}
+function getCountLoadedProcess(){
+	return pc.runningProcesses.length;
+}
+function getCountWorkProcess(){
+	var countRun = 0;
+	for(var i=0;i<pc.runningProcesses.length;i++)
+		if(pc.runningProcesses[i].statusWork=="run")
+			countRun++;
+	return countRun;
+}
+function getListNamesWorkProcess(o){
+	var listNames = [];
+	for(var i=0;i<pc.runningProcesses.length;i++)
+		if(pc.runningProcesses[i].statusWork=="run")
+			listNames[listNames.length] = pc.runningProcesses[i].name;
+	var ul = "<ul style='margin: 25px 0px 0px;padding-left: 20px;'>";
+	for(var i=0;i<listNames.length;i++){
+		var li = "<li>";
+		li += listNames[i];
+		if(o.isShowBtnStopApp)
+			li += "<input type='button' value='stopApp' onclick='stopApp(\""+listNames[i]+"\")'>";
+		li += "</li>";
+		ul += li;
+	}
+	ul += "</ul>";
+	return ul;
+}
+function stopApp(appName){
+	for(var i=0;i<pc.runningProcesses.length;i++)
+		if(pc.runningProcesses[i].name==appName && pc.runningProcesses[i].statusWork=="run"){
+			pc.runningProcesses[i].statusWork = "stop";
+			clearMemory(appName);
+			break;
+		}
+}
+function clearMemory(appName){
+	for(var i=0;i<pc.runningProcesses.length;i++)
+		if(pc.runningProcesses[i].name==appName && pc.runningProcesses[i].statusWork=="stop"){
+			for(var j=0;j<pc.runningProcesses[i].codeList.length;j++){
+				var screenOut = pc.runningProcesses[i].configs.screenOut;
+				var cmds = pc.runningProcesses[i].codeList[j].split(" ");
+				if(cmds[0]=="screenBlock"){
+					var el = document.getElementById("screens_frame_"+screenOut+"_"+cmds[1]);
+					el.remove();
+				}
+			}
+		}
+}
+function newDevice(typeDevice){
+	if(typeDevice=="keyboardStandart"){
+		var id = "keyboardStandart";
+		var el = document.getElementById(id);
+		if(el)
+			el.remove();
+		var o = { 
+			"id": "div_pc_devices_" + id
+		};
+		createElement(
+			"div"
+			, "div_pc_devices"
+			, o
+		);
+		for(var i=1;i<10;i++){
+			o = {
+				"id": "div_pc_devices_" + id + "_" + i
+				, "innerHTML": ""+i
+				, "display": "inline-block"
+				, "margin": "10px"
+				, "padding": "10px"
+				, "border": "1px solid black"
+				, "border-radius": "5px"
+			};
+			newKeyboardKey("div_pc_devices_" + id, o);
+		}
+		o = {
+			"id": "div_pc_devices_" + id + "_0"
+			, "innerHTML": "0"
+			, "display": "inline-block"
+			, "margin": "10px"
+			, "padding": "10px"
+			, "border": "1px solid black"
+			, "border-radius": "5px"
+		};
+		newKeyboardKey("div_pc_devices_" + id, o);
+	}
+}
+function newKeyboardKey(parentId, o){
+	var id = o.id;
+	var el = document.getElementById(id);
+	if(el)
+		el.remove();
+	createElement(
+		"div"
+		, parentId
+		, o
+	);
+}
+		</script>
+	</head>
+	<body id="body">
+		<div id="div_pc__btns_screens" style="margin-left: 100px;">
+			<div id="div_pc_btns" style="display: inline-block; padding: 5px 10px 0px 0px; background: grey; border-radius: 5px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px">
+				<div id="div_pc_btn_start" class="div_btn start" onclick="pc_start()">pc_start</div>
+				<div id="div_pc_btn_stop" class="div_btn stop" onclick="pc_stop()">pc_stop</div>
+				<div id="div_pc_status">...</div>
+			</div>
+			<div id="div_pc_screens" style="margin-top: -1px;"></div>
+			<div id="div_pc_devices" style="">keyboards</div>
+		</div>
+	</body>
+</html>
