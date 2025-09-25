@@ -6,7 +6,7 @@ Let me know or make any changes you'd like to see, have fun :)
 
 # Next plans
 1. Mod core
-	- make core faster
+	- make core faster & smarter
 1. Mod apps
 	- make gl work as it should
 1. New apps
