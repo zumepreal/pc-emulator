@@ -147,15 +147,17 @@ function loadDefaultProcessesAkaCore(){
 			"screenBlockStyle top_help_screens color red",
 			"print top_help_screens Shift+1 goto Screen1",
 			"println top_help_screens Shift+2 goto Screen2",
+			"println top_loading loading autoStartApps_app...",
 			//
+			// autoStartApps
+			/*
 			"screenBlock2Parent top top_autoStartApps",
 			"print top_autoStartApps [time]",
 			"println top_autoStartApps loaded",
 			"sleep 10",
 			"println top_autoStartApps [time]",
 			"println top_autoStartApps loading auto start apps...",
-			// autoStartApps
-			"load autoStartApps",
+			"innerCall autoStartApps",
 			"println top_autoStartApps [time]",
 			"println top_autoStartApps loaded",
 			"sleep 10",
@@ -181,6 +183,8 @@ function loadDefaultProcessesAkaCore(){
 			"btnEvent setStyleWhiteMode mouseout style backgroundColor white",
 			// btn startGlSampleApp
 			"btn top_btns startAppGlSample onclick startApp gl_sample_app",
+			*/
+			"start app autoStartApps_app",
 			//
 			"start app core_main_loop_otherApps_app",
 			"start app gl_app"
@@ -217,7 +221,7 @@ function setDefaultFunctionsInInd(ind){
 		}
 		if(it>-1)
 			this.codeCurrentPosition = it;
-		console.log("it: "+it);
+		//console.log("it: "+it);
 	};
 	pc.runningProcesses[ind]["setScreenActive"] = function(screenId){
 		setScreenActive(screenId);
@@ -546,7 +550,7 @@ function parseCmd(processInd, cmdLine){
 	if(cmd=="goto"){
 		currentProcess.goto(cmds[1]);
 	}
-	if(cmd=="load"){
+	if(cmd=="innerCall"){
 		if(cmds[1]=="autoStartApps")
 			autoStartApps();
 	}
@@ -834,6 +838,8 @@ function setStyleMode(styleMode){
 }
 function modElementStyle2(elId, o){
 	var el = document.getElementById(elId);
+	if(!el)
+		return;
 	if(o==null){
 		el.style = "";
 		return;
@@ -844,6 +850,8 @@ function modElementStyle2(elId, o){
 }
 function modElementStyle(elId, o){
 	var el = document.getElementById(elId);
+	if(!el)
+		return;
 	el.style[o.styleName] = o.styleValue;
 }
 function modElementEvent(elId, event, o){
@@ -1027,7 +1035,8 @@ function clearMemory(appName){
 				var cmds = pc.runningProcesses[i].codeList[j].split(" ");
 				if(cmds[0]=="screenBlock"){
 					var el = document.getElementById("screens_frame_"+screenOut+"_"+cmds[1]);
-					el.remove();
+					if(el)
+						el.remove();
 				}
 			}
 		}
